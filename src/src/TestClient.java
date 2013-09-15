@@ -45,7 +45,7 @@ public class TestClient {
                 
                 LOG.log(Level.INFO, "Server response: {0}", response);
                 
-                request = scan.next();
+                request = scan.nextLine();
             }
             
             if(request.contentEquals("end")){
