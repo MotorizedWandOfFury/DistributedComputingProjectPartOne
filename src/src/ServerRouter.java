@@ -25,6 +25,8 @@ public class ServerRouter {
     private HashMap<String, Integer> routingTable;
     public static final int PORT = 6000;
     private ServerSocket service;
+    private PrintWriter writer;
+    private BufferedReader reader;
     private static final Logger LOG = Logger.getLogger(ServerRouter.class.getName());
     private ExecutorService exec = Executors.newSingleThreadExecutor();
 
@@ -40,14 +42,24 @@ public class ServerRouter {
         Runnable clientResolver = new Runnable() {
             @Override
             public void run() {
-                try {
-                    Socket client = service.accept();
-                    
+
+                try (Socket client = service.accept()) {
                     LOG.log(Level.INFO, "Servicing request from client on port {0}", client.getPort());
                     
+                    writer = new PrintWriter(client.getOutputStream());
+                    reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
                     
-                    LOG.log(Level.INFO, "Response sent to client at port {0}, closing socket", client.getPort());   
+                    String request = reader.readLine();
+                    String[] commands = request.split("\\s");
+                    
+                    dispatch(commands, writer);
+
+                    LOG.log(Level.INFO, "Response sent to client at port {0}, closing socket", client.getPort());
+                    
+                    writer.close();
+                    reader.close();
                     client.close();
+                    
                 } catch (IOException ex) {
                     LOG.log(Level.SEVERE, null, ex);
                 }
@@ -62,14 +74,55 @@ public class ServerRouter {
             exec.shutdown();
         }
     }
+    
+    private void dispatch(String[] commands, PrintWriter writer){
+        
+        switch(commands[0]){ //first element of string array must be one of the accepted commands
+            case "ADD":
+                String clientName = commands[1];
+                String portNumber = commands[2];
+                int port = 0;
+                try {
+                    port = Integer.parseInt(portNumber);
+                    add(clientName, port);
+                } catch (NumberFormatException nfe) {
+                    LOG.warning("portNumber parameter was not an integer");
+                }
 
-    public synchronized void add(String name, int port) {
+                LOG.log(Level.INFO, "client request serviced: ADD {0} {1}", new Object[]{clientName, portNumber});
+                break;
+            case "REMOVE":
+                clientName = commands[1];
+
+                remove(clientName);
+
+                LOG.log(Level.INFO, "client request serviced: REMOVE {0}", clientName);
+                break;
+            case "FIND":
+                clientName = commands[1];
+                int portNumberResult = find(clientName);
+
+                if (portNumberResult == 0) {
+                    writer.write("NOTFOUND");
+                    writer.flush();
+                } else {
+                    writer.write("FOUND " + portNumberResult);
+                }
+
+                LOG.log(Level.INFO, "client request serviced: FIND {0}", clientName);
+                break;
+            default:
+                LOG.log(Level.WARNING, "Unknown command: {0}", commands[0]);
+        }
+    }
+
+    private synchronized void add(String name, int port) {
         if (!isInTable(name)) {
             routingTable.put(name, port);
         }
     }
 
-    public synchronized int find(String name) {
+    private synchronized int find(String name) {
         if (isInTable(name)) {
             return routingTable.get(name);
         } else {
@@ -77,8 +130,14 @@ public class ServerRouter {
         }
 
     }
+    
+    private synchronized void remove(String name){
+        if(isInTable(name)){
+            routingTable.remove(name);
+        }
+    }
 
-    public boolean isInTable(String name) {
+    private boolean isInTable(String name) {
         return routingTable.containsKey(name);
     }
 }
