@@ -18,10 +18,11 @@ public class CSRouterMain {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        CSRouter router;
+        CSRouter server;
         try {
-            router = new CSRouter();
-            router.listen();
+            server = new CSRouter();
+            server.listen();
+
         } catch (IOException ex) {
             Logger.getLogger(CSRouterMain.class.getName()).log(Level.SEVERE, null, ex);
         }
