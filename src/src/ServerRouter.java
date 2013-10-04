@@ -28,57 +28,69 @@ public class ServerRouter {
     private PrintWriter writer;
     private BufferedReader reader;
     private static final Logger LOG = Logger.getLogger(ServerRouter.class.getName());
-    private ExecutorService exec = Executors.newSingleThreadExecutor();
+    private ExecutorService exec = Executors.newCachedThreadPool();
 
-    private ServerRouter() throws IOException {
+    public ServerRouter() throws IOException {
         routingTable = new HashMap<>();
         service = new ServerSocket(PORT);
         LOG.log(Level.INFO, "Starting up ServerRouter on port {0}", PORT);
     }
 
+    class ServerRouterWorker implements Runnable {
+
+        private Socket client;
+
+        public ServerRouterWorker(Socket s) {
+            client = s;
+        }
+
+        @Override
+        public void run() {
+            try {
+                LOG.log(Level.INFO, "Servicing request from client on port {0}", client.getPort());
+
+                writer = new PrintWriter(client.getOutputStream(), true);
+                reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
+
+                String request = reader.readLine();
+                String[] commands = request.split("\\s");
+
+                dispatch(commands, writer);
+
+                LOG.log(Level.INFO, "Response sent to client at port {0}. Closing socket.", client.getPort());
+
+                writer.close();
+                reader.close();
+                client.close();
+
+            } catch (IOException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
     public void listen() throws IOException, ClassNotFoundException {
         LOG.info("ServerRouter is now listening");
 
-        Runnable clientResolver = new Runnable() {
-            @Override
-            public void run() {
-
-                try (Socket client = service.accept()) {
-                    LOG.log(Level.INFO, "Servicing request from client on port {0}", client.getPort());
-                    
-                    writer = new PrintWriter(client.getOutputStream());
-                    reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
-                    
-                    String request = reader.readLine();
-                    String[] commands = request.split("\\s");
-                    
-                    dispatch(commands, writer);
-
-                    LOG.log(Level.INFO, "Response sent to client at port {0}, closing socket", client.getPort());
-                    
-                    writer.close();
-                    reader.close();
-                    client.close();
-                    
-                } catch (IOException ex) {
-                    LOG.log(Level.SEVERE, null, ex);
-                }
-            }
-        };
-
         try {
             while (true) {
-                exec.execute(clientResolver);
+                exec.execute(new ServerRouterWorker(service.accept()));
             }
+
         } finally {
             exec.shutdown();
         }
     }
-    
-    private void dispatch(String[] commands, PrintWriter writer){
-        
-        switch(commands[0]){ //first element of string array must be one of the accepted commands
+
+    private void dispatch(String[] commands, PrintWriter writer) {
+
+        switch (commands[0]) { //first element of string array must be one of the accepted commands
             case "ADD":
+                if (commands.length != 3) {
+                    LOG.warning("Insufficient number of parameters in ADD command");
+                    break;
+                }
+
                 String clientName = commands[1];
                 String portNumber = commands[2];
                 int port = 0;
@@ -103,10 +115,10 @@ public class ServerRouter {
                 int portNumberResult = find(clientName);
 
                 if (portNumberResult == 0) {
-                    writer.write("NOTFOUND");
+                    writer.println("NOTFOUND");
                     writer.flush();
                 } else {
-                    writer.write("FOUND " + portNumberResult);
+                    writer.println("FOUND " + portNumberResult);
                 }
 
                 LOG.log(Level.INFO, "client request serviced: FIND {0}", clientName);
@@ -130,9 +142,9 @@ public class ServerRouter {
         }
 
     }
-    
-    private synchronized void remove(String name){
-        if(isInTable(name)){
+
+    private synchronized void remove(String name) {
+        if (isInTable(name)) {
             routingTable.remove(name);
         }
     }
