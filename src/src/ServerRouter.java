@@ -25,8 +25,6 @@ public class ServerRouter {
     private HashMap<String, Integer> routingTable;
     public static final int PORT = 6000;
     private ServerSocket service;
-    private PrintWriter writer;
-    private BufferedReader reader;
     private static final Logger LOG = Logger.getLogger(ServerRouter.class.getName());
     private ExecutorService exec = Executors.newCachedThreadPool();
 
@@ -36,9 +34,11 @@ public class ServerRouter {
         LOG.log(Level.INFO, "Starting up ServerRouter on port {0}", PORT);
     }
 
-    class ServerRouterWorker implements Runnable {
+    private class ServerRouterWorker implements Runnable {
 
         private Socket client;
+        private PrintWriter writer;
+        private BufferedReader reader;
 
         public ServerRouterWorker(Socket s) {
             client = s;
@@ -116,7 +116,6 @@ public class ServerRouter {
 
                 if (portNumberResult == 0) {
                     writer.println("NOTFOUND");
-                    writer.flush();
                 } else {
                     writer.println("FOUND " + portNumberResult);
                 }
@@ -131,13 +130,16 @@ public class ServerRouter {
     private synchronized void add(String name, int port) {
         if (!isInTable(name)) {
             routingTable.put(name, port);
+            LOG.log(Level.INFO, "Added name: {0} and port: {1}", new Object[]{name, port});
         }
     }
 
     private synchronized int find(String name) {
         if (isInTable(name)) {
+            LOG.log(Level.INFO, "Found name: {0}", name);
             return routingTable.get(name);
         } else {
+            LOG.log(Level.INFO, "Did not find name: {0}", name);
             return 0;
         }
 
@@ -145,6 +147,7 @@ public class ServerRouter {
 
     private synchronized void remove(String name) {
         if (isInTable(name)) {
+            LOG.log(Level.INFO, "Removed name: {0}", name);
             routingTable.remove(name);
         }
     }

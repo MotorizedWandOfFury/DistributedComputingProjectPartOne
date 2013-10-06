@@ -33,7 +33,7 @@ public class CSRouter {
         LOG.log(Level.INFO, "Starting up CSRouter on port {0}", PORT);
     }
 
-    class CSRouterWorker implements Runnable {
+    private class CSRouterWorker implements Runnable {
 
         private PrintWriter writer;
         private BufferedReader reader;
@@ -54,19 +54,15 @@ public class CSRouter {
 
                 String request = "";
 
-                while ((request = reader.readLine()) != null) { // we end this session when no request has been recieved
+                while ((request = reader.readLine()) != null) { // we end this loop when no request has been recieved
 
                     String[] commands = request.split("\\s");
 
-                    LOG.log(Level.INFO, "Recieved request from client {0}: {1}", new Object[]{clientPort, request});
-
-                    LOG.log(Level.INFO, "Responding to request from client {0}", clientPort);
+                    LOG.log(Level.INFO, "Responding to request from client {0}: {1}", new Object[]{clientPort, request});
 
                     dispatch(commands, writer, reader);
 
                     LOG.log(Level.INFO, "Response sent to client at port {0}", clientPort);
-
-
                 }
 
             } catch (Exception ex) {
@@ -87,6 +83,7 @@ public class CSRouter {
     public void listen() throws IOException {
 
         LOG.info("CSRouter is now listening");
+        
         try {
             while (true) {
                 exec.execute(new CSRouterWorker(socket.accept()));
