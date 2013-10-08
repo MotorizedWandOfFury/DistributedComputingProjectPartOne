@@ -30,9 +30,9 @@ GET \<filename> \<destinationclientname>
 
 FILE \<filename> \<destinationclientname>
 
-SEND <filename> <fromclientname>
+SEND \<filename> \<fromclientname>
 
-BYE <clientname>
+BYE \<clientname>
 
 
 
@@ -40,11 +40,11 @@ BYE <clientname>
 
 If CSRouter receives:
 
-HELLO <clientname> <portnumber>
+HELLO \<clientname> \<portnumber>
 
 it will return ACKNOWLEDGED
 
-GET <filename> <destinationclientname>
+GET \<filename> \<destinationclientname>
 
 if file found: SEND, then the file subsequently
 
@@ -78,26 +78,26 @@ FOUND, NOTFOUND
 
 syntax
 
-ADD <clientname> <portnumber>
+ADD \<clientname> \<portnumber>
 
-FIND <destinationclientname>
+FIND \<destinationclientname>
 
-REMOVE <clientname>
+REMOVE \<clientname>
 
 
 
 
 If ServerRouter receives:
 
-ADD <clientname> <portnumber>
+ADD \<clientname> \<portnumber>
 
 server does not respond
 
-FIND <destinationclientname>
+FIND \<destinationclientname>
 
-server will return FOUND <portnumber>
+server will return FOUND \<portnumber>
 
-REMOVE <clientname>
+REMOVE \<clientname>
 
 server does not respond
 
@@ -120,22 +120,22 @@ READY, FILE, FILENOTFOUND
 
 syntax
 
-GET <filename> <destinationclientname>
+GET \<filename> \<destinationclientname>
 
-SEND <filename> <destinationclientname>
+SEND \<filename> \<destinationclientname>
 
 
 
 
 If Client receives:
 
-GET <filename> <clientname>
+GET \<filename> \<clientname>
 
 if the file is found, it will return FILE, then the file itself subsequently
 
 if the file is not found, it will return FILENOTFOUND
 
-SEND <filename> <fromclientname>
+SEND \<filename> \<fromclientname>
 
 client responds with READY and prepares for file reception
 
@@ -144,6 +144,7 @@ client responds with READY and prepares for file reception
 
 
 Protocol Scenarios in depth
+------------------
 
 Client Tells CSRouter it exists
 
@@ -153,7 +154,7 @@ Client Tells CSRouter it exists
 
 -CSRouter connects with ServerRouter
 
--CSRouter sends message ADD <clientname> <portnumber> 
+-CSRouter sends message ADD \<clientname> \<portnumber> 
 
 -ServerRouter adds the client name and port number to routing table
 
@@ -164,15 +165,18 @@ Client Tells CSRouter it exists
 -Client receives message and disconnects
 
 
+---------------
+
+
 Client shuts down
 
--Client connects with CSRouter and sends message BYE <clientname>
+-Client connects with CSRouter and sends message BYE \<clientname>
 
 -CSRouter receives message
 
 -CSRouter connects with ServerRouter
 
--CSRouter sends message REMOVE <clientname>
+-CSRouter sends message REMOVE \<clientname>
 
 -ServerRouter removes client name from routing table
 
@@ -181,21 +185,26 @@ Client shuts down
 -Client disconnects from CSRouter
 
 
+
+
+-----------
+
+
 Client requests a file
 
--Client connects with CSRouter and sends message GET <filename> <fromclient>
+-Client connects with CSRouter and sends message GET \<filename> \<fromclient>
 
 -CSRouter receives this message
 
 -CSRouter connects with ServerRouter
 
--CSRouter sends message FIND <fromclient>
+-CSRouter sends message FIND \<fromclient>
 
 -ServerRouter looks up client and returns NOTFOUND if fromClient does not exist in table or FOUND <portnumber> if client resolution was successful
 
 -CSRouter connects with fromClient at portnumber
 
--CSRouter sends message GET <filename>
+-CSRouter sends message GET \<filename>
 
 -fromClient responds with FILENOTFOUND if file does not exist on fromClient, or FILE if it does
 
@@ -205,7 +214,7 @@ Client requests a file
 
 -CSRouter disconnects from fromClient
 
--CSRouter sends message to Client SEND <filename>
+-CSRouter sends message to Client SEND \<filename>
 
 -Client responds with READY
 
