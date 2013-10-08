@@ -87,3 +87,140 @@ Client requests a file
 -Client receives file and disconnects
 
 Note: CSRouter will respond with REQUESTUNSUCCESSFULL if at any point there is a failure, after which Client will disconnect
+
+
+----------------
+
+
+commands accepted by CSRouter
+
+HELLO, GET, BYE, FILE
+
+
+
+
+responses by CSRouter
+
+ACKNOWLEDGED, SEND, REQUESTUNSUCESSFULL
+
+
+
+
+syntax
+
+HELLO \<clientname> \<portnumber>
+
+GET \<filename> \<destinationclientname>
+
+FILE \<filename> \<destinationclientname>
+
+SEND \<filename> \<fromclientname>
+
+BYE \<clientname>
+
+
+
+  
+
+If CSRouter receives:
+
+HELLO \<clientname> \<portnumber>
+
+it will return ACKNOWLEDGED
+
+GET \<filename> \<destinationclientname>
+
+if file found: SEND, then the file subsequently
+
+if file not found: REQUESTUNSUCCESSFUL
+
+FILE
+
+server respond with ACKNOWLEDGED and prepares for file reception
+
+BYE
+
+server does not respond
+
+
+
+
+
+
+
+commands accepted by ServerRouter
+
+ADD, FIND, REMOVE
+
+
+
+
+responses by ServerRouter
+
+FOUND, NOTFOUND
+
+
+
+
+syntax
+
+ADD \<clientname> \<portnumber>
+
+FIND \<destinationclientname>
+
+REMOVE \<clientname>
+
+
+
+
+If ServerRouter receives:
+
+ADD \<clientname> \<portnumber>
+
+server does not respond
+
+FIND \<destinationclientname>
+
+server will return FOUND \<portnumber>
+
+REMOVE \<clientname>
+
+server does not respond
+
+
+  
+
+commands accepted by Client
+
+GET, SEND
+
+
+
+
+responses by Client
+
+READY, FILE, FILENOTFOUND
+
+
+
+
+syntax
+
+GET \<filename> 
+
+SEND \<filename>
+
+
+
+
+If Client receives:
+
+GET \<filename> 
+
+if the file is found, it will return FILE, then the file itself subsequently
+
+if the file is not found, it will return FILENOTFOUND
+
+SEND \<filename>
+
+client responds with READY and prepares for file reception
