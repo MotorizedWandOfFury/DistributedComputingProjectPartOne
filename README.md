@@ -4,7 +4,7 @@ Due: Oct 21, 2013
 
 DC Protocol
 
-structure: <command> <param1> <param2>...<param n>
+structure: \<command> <param1> <param2>...<param n>
 
 
 
