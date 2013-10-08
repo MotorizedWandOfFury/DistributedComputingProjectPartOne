@@ -4,7 +4,7 @@ Due: Oct 21, 2013
 
 DC Protocol
 
-structure: \<command> <param1> <param2>...<param n>
+structure: \<command> \<param1> \<param2>...\<param n>
 
 
 
@@ -24,11 +24,11 @@ ACKNOWLEDGED, SEND, REQUESTUNSUCESSFULL
 
 syntax
 
-HELLO <clientname> <portnumber>
+HELLO \<clientname> \<portnumber>
 
-GET <filename> <destinationclientname>
+GET \<filename> \<destinationclientname>
 
-FILE <filename> <destinationclientname>
+FILE \<filename> \<destinationclientname>
 
 SEND <filename> <fromclientname>
 
@@ -138,12 +138,16 @@ if the file is not found, it will return FILENOTFOUND
 SEND <filename> <fromclientname>
 
 client responds with READY and prepares for file reception
+
+
 -----------------------------------
+
+
 Protocol Scenarios in depth
 
 Client Tells CSRouter it exists
 
--Client connects with CSRouter and sends message HELLO <clientname> <portnumber>
+-Client connects with CSRouter and sends message HELLO \<clientname> \<portnumber>
 
 -CSRouter receives this message
 
