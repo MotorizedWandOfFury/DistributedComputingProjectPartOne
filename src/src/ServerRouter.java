@@ -96,7 +96,13 @@ public class ServerRouter {
                 int port = 0;
                 try {
                     port = Integer.parseInt(portNumber);
-                    add(clientName, port);
+                    boolean status = add(clientName, port);
+
+                    if (status) {
+                        writer.println("OK");
+                    } else {
+                        writer.println("ERROR");
+                    }
                 } catch (NumberFormatException nfe) {
                     LOG.warning("portNumber parameter was not an integer");
                 }
@@ -127,10 +133,14 @@ public class ServerRouter {
         }
     }
 
-    private synchronized void add(String name, int port) {
+    private synchronized boolean add(String name, int port) {
         if (!isInTable(name)) {
             routingTable.put(name, port);
             LOG.log(Level.INFO, "Added name: {0} and port: {1}", new Object[]{name, port});
+            return true;
+        } else {
+            LOG.log(Level.INFO, "Identifier {0} already exists in routing table", name);
+            return false;
         }
     }
 
