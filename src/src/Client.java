@@ -78,6 +78,8 @@ public class Client {
                     }
                     String fileName = commands[1];
                     String fromClient = commands[2];
+                    
+                    long fileLookUpTimeStart = System.currentTimeMillis();
 
                     w.println("GET" + " " + fileName + " " + fromClient);
 
@@ -85,11 +87,13 @@ public class Client {
 
                     switch (response) {
                         case "REQUESTUNSUCCESSFULL":
-                            LOG.info("File was not available");
+                            long fileLookUpTime = System.currentTimeMillis() - fileLookUpTimeStart;
+                            LOG.log(Level.INFO, "File was not available. Search took {0}ms", fileLookUpTime);
                             break;
                         case "FILE":
-                            long start = System.currentTimeMillis();
-                            LOG.info("File was found. Receiving file");
+                            fileLookUpTime = System.currentTimeMillis() - fileLookUpTimeStart;
+                            
+                            LOG.log(Level.INFO, "File was found in {0}ms. Receiving file", fileLookUpTime);
 
                             File f = new File("C:\\Users\\Ping\\Downloads\\" + name + "\\" + fileName);
                             FileOutputStream fos = new FileOutputStream(f);
@@ -97,10 +101,13 @@ public class Client {
                             byte[] buffer = new byte[s.getReceiveBufferSize()];
                             int count;
 
+                            long start = System.currentTimeMillis();
+                            
                             while ((count = in.read(buffer)) > 0) {
                                 fos.write(buffer, 0, count);
                                 fos.flush();
                             }
+                            
                             long end = System.currentTimeMillis();
                             LOG.log(Level.INFO, "File received in {0}ms. File size was {1} bytes.", new Object[]{end-start, f.length()});
                             break;

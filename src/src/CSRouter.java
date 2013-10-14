@@ -30,7 +30,6 @@ public class CSRouter {
     private ServerSocket socket;
     public static final int PORT = 5999;
     private static final Logger LOG = Logger.getLogger(CSRouter.class.getName());
-    private int clientCount = 0;
     private ExecutorService exec = Executors.newFixedThreadPool(11);
 
     public CSRouter() throws IOException {
@@ -40,7 +39,6 @@ public class CSRouter {
 
     private class CSRouterWorker implements Runnable {
 
-        private PrintWriter writer;
         private BufferedReader reader;
         private Socket client;
         private int clientPort;
@@ -54,7 +52,6 @@ public class CSRouter {
         public void run() {
             LOG.log(Level.INFO, "New Thread spawned for client at port: {0}", clientPort);
             try {
-                writer = new PrintWriter(client.getOutputStream(), true);
                 reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
                 String request = "";
@@ -74,8 +71,6 @@ public class CSRouter {
                 LOG.log(Level.SEVERE, null, ex);
             } finally {
                 try {
-
-                    writer.close();
                     reader.close();
                     client.close();
                     LOG.log(Level.INFO, "Client {0} disconnected. Ending thread.", clientPort);
@@ -102,7 +97,7 @@ public class CSRouter {
 
     private void dispatch(String[] commands, Socket client) throws UnknownHostException, IOException {
        PrintWriter writer = new PrintWriter(client.getOutputStream(), true);
-               BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
+               //BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
         
         switch (commands[0]) {
             case "HELLO":
@@ -162,13 +157,24 @@ public class CSRouter {
                         byte[] buffer = new byte[1024];
                         int count;
                         
+                        long fileSendTimeStart = System.currentTimeMillis();
+                        
                         while((count = fis.read(buffer)) > 0){
+                            
+                            long fileReadTimeStart = System.currentTimeMillis();
+                            
                             bos.write(buffer, 0, count);
                             bos.flush();
+                            
+                            long fileReadTime = System.currentTimeMillis() - fileReadTimeStart;
+                            
+                            LOG.log(Level.INFO, "Read and sent {0} bytes to client in {1}ms", new Object[]{count, fileReadTime});
                         }
                         fis.close();
                         bos.close();
-                        LOG.info("File sent");
+                        
+                        long fileSendTime = System.currentTimeMillis() - fileSendTimeStart;
+                        LOG.log(Level.INFO, "File {0} sent in {1}ms", new Object[]{fileName, fileSendTime});
                     }
                 }
 
@@ -263,18 +269,25 @@ public class CSRouter {
                     
                     InputStream in = fileServer.getInputStream();
                     
+                    long fileReceptionStart = System.currentTimeMillis();
+                    
                     LOG.info("Receiving file");
                     while((count = in.read(buffer)) > 0){
+                        long writeTimeStart = System.currentTimeMillis();
+                        
                         fos.write(buffer, 0, count); 
                         fos.flush();
-                        LOG.log(Level.FINE, "Count variable: {0}", count);
+                        
+                        long writeTimeEnd = System.currentTimeMillis();
+                        LOG.log(Level.INFO, "Wrote and flushed {0} bytes in {1}ms to file {2}", new Object[]{count, writeTimeEnd - writeTimeStart, fileName});
                     }
                     
                     fos.close();
                     in.close();
                     
+                    long fileReceptionEnd = System.currentTimeMillis();
                     
-                    LOG.info("File received");
+                    LOG.log(Level.INFO, "File {1} received from client in {0}ms", new Object[]{(fileReceptionEnd - fileReceptionStart), fileName});
                     break;
             }
         }
