@@ -161,14 +161,14 @@ public class CSRouter {
                         
                         while((count = fis.read(buffer)) > 0){
                             
-                            long fileReadTimeStart = System.currentTimeMillis();
+                            //long fileReadTimeStart = System.currentTimeMillis();
                             
                             bos.write(buffer, 0, count);
                             bos.flush();
                             
-                            long fileReadTime = System.currentTimeMillis() - fileReadTimeStart;
+                            //long fileReadTime = System.currentTimeMillis() - fileReadTimeStart;
                             
-                            LOG.log(Level.INFO, "Read and sent {0} bytes to client in {1}ms", new Object[]{count, fileReadTime});
+                            //LOG.log(Level.INFO, "Read and sent {0} bytes to client in {1}ms", new Object[]{count, fileReadTime});
                         }
                         fis.close();
                         bos.close();
@@ -238,7 +238,6 @@ public class CSRouter {
         long start = System.currentTimeMillis();
         
         File f = null;
-        int fileSize = 0;
         try (Socket fileServer = new Socket("localhost", port)) {
             PrintWriter newWriter = new PrintWriter(fileServer.getOutputStream(), true);
             BufferedReader newReader = new BufferedReader(new InputStreamReader(fileServer.getInputStream()));
@@ -252,19 +251,10 @@ public class CSRouter {
                 case "FILENOTFOUND":
                     break;
                 case "FILE":
-                    if (commands.length != 2) {
-                        LOG.warning("Insufficient number of parameters in FILE command");
-                    }                
-                    try {
-                        fileSize = Integer.parseInt(commands[1]);
-                    } catch (NumberFormatException nfe) {
-                        LOG.warning("filesize parameter was not an integer");
-                        break;
-                    }
                     new File("C:\\Users\\Ping\\Downloads\\temp\\").mkdir();
                     f = new File("C:\\Users\\Ping\\Downloads\\temp\\"+fileName);
                     FileOutputStream fos = new FileOutputStream(f);
-                    byte[] buffer = new byte[fileSize];
+                    byte[] buffer = new byte[1024];
                     int count;
                     
                     InputStream in = fileServer.getInputStream();
@@ -273,13 +263,13 @@ public class CSRouter {
                     
                     LOG.info("Receiving file");
                     while((count = in.read(buffer)) > 0){
-                        long writeTimeStart = System.currentTimeMillis();
+                        //long writeTimeStart = System.currentTimeMillis();
                         
                         fos.write(buffer, 0, count); 
                         fos.flush();
                         
-                        long writeTimeEnd = System.currentTimeMillis();
-                        LOG.log(Level.INFO, "Wrote and flushed {0} bytes in {1}ms to file {2}", new Object[]{count, writeTimeEnd - writeTimeStart, fileName});
+                       // long writeTimeEnd = System.currentTimeMillis();
+                        //LOG.log(Level.INFO, "Wrote and flushed {0} bytes in {1}ms to file {2}", new Object[]{count, writeTimeEnd - writeTimeStart, fileName});
                     }
                     
                     fos.close();
@@ -292,7 +282,7 @@ public class CSRouter {
             }
         }
         long end = System.currentTimeMillis();
-        LOG.log(Level.INFO, "File retrieval operation completed in {0}ms. File recieved was {1} bytes in size", new Object[]{(end - start), fileSize});
+        LOG.log(Level.INFO, "File retrieval operation completed in {0}ms. File recieved was {1} bytes in size", new Object[]{(end - start), f.length()});
         return f;
     }
 }

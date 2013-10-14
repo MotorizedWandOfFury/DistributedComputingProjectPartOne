@@ -79,6 +79,11 @@ public class Client {
                     String fileName = commands[1];
                     String fromClient = commands[2];
                     
+                    if(fromClient.contentEquals(name)){
+                        LOG.warning("You can't request files from yourself.");
+                        continue;
+                    }
+                    
                     long fileLookUpTimeStart = System.currentTimeMillis();
 
                     w.println("GET" + " " + fileName + " " + fromClient);
@@ -195,6 +200,8 @@ public class Client {
             case "GET":
                 if (commands.length != 2) {
                     LOG.warning("Insufficient parameters for GET command");
+                    writer.println("FILENOTFOUND");
+                    break;
                 }
 
                 String fileName = commands[1];
@@ -213,14 +220,18 @@ public class Client {
                         int count;
 
                         LOG.info("Sending file");
+                        
+                        long uploadTimeStart = System.currentTimeMillis();
 
                         while ((count = file.read(buffer)) > 0) {
                             bos.write(buffer, 0, count);
                             bos.flush();
                         }
+                        
+                        long uploadTime = System.currentTimeMillis() - uploadTimeStart;
+                        LOG.log(Level.INFO, "File sent in {0}ms", uploadTime);
                     }
-
-                    LOG.info("File sent");
+                    
                 }
                 break;
             default:
