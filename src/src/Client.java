@@ -47,10 +47,10 @@ public class Client {
 
             LOG.info("Spawning user service thread");
             try {
-                Socket s = new Socket("localhost", CSRouter.PORT);
+                Socket s = new Socket(AppConstants.HOST, AppConstants.CSROUTER_PORT);
                 PrintWriter w = new PrintWriter(s.getOutputStream(), true);
                 BufferedReader r = new BufferedReader(new InputStreamReader(s.getInputStream()));
-                new File("C:\\Users\\Ping\\Downloads\\" + name + "\\").mkdir();
+                new File(AppConstants.BASE_DIR + name + "\\").mkdir();
 
                 Scanner scan = new Scanner(System.in);
                 String userRequest;
@@ -59,7 +59,7 @@ public class Client {
                     LOG.info("Getting next user command(format must be GET <filename> <fromclient>)");
                     userRequest = scan.nextLine();
                     if (userRequest.contentEquals("bye")) {
-                        w.println("BYE " + name);
+                        w.println(AppConstants.BYE + " " + name);
                         r.close();
                         w.close();
                         s.close();
@@ -86,21 +86,21 @@ public class Client {
                     
                     long fileLookUpTimeStart = System.currentTimeMillis();
 
-                    w.println("GET" + " " + fileName + " " + fromClient);
+                    w.println(AppConstants.GET + " " + fileName + " " + fromClient);
 
                     String response = r.readLine();
 
                     switch (response) {
-                        case "REQUESTUNSUCCESSFULL":
+                        case AppConstants.REQUESTUNSUCCESSFULL:
                             long fileLookUpTime = System.currentTimeMillis() - fileLookUpTimeStart;
                             LOG.log(Level.INFO, "File was not available. Search took {0}ms", fileLookUpTime);
                             break;
-                        case "FILE":
+                        case AppConstants.FILE:
                             fileLookUpTime = System.currentTimeMillis() - fileLookUpTimeStart;
                             
                             LOG.log(Level.INFO, "File was found in {0}ms. Receiving file", fileLookUpTime);
 
-                            File f = new File("C:\\Users\\Ping\\Downloads\\" + name + "\\" + fileName);
+                            File f = new File(AppConstants.BASE_DIR + name + "\\" + fileName);
                             FileOutputStream fos = new FileOutputStream(f);
                             InputStream in = s.getInputStream();
                             byte[] buffer = new byte[s.getReceiveBufferSize()];
@@ -169,13 +169,13 @@ public class Client {
     }
 
     public boolean register() throws UnknownHostException, IOException {
-        try (Socket s = new Socket("localhost", CSRouter.PORT)) {
+        try (Socket s = new Socket("localhost", AppConstants.CSROUTER_PORT)) {
             String response;
             try (PrintWriter w = new PrintWriter(s.getOutputStream(), true); BufferedReader r = new BufferedReader(new InputStreamReader(s.getInputStream()))) {
-                w.println("HELLO " + this.name + " " + this.port);
+                w.println(AppConstants.HELLO + " " + this.name + " " + this.port);
                 response = r.readLine();
             }
-            return response.contentEquals("ACKNOWLEDGED") ? true : false;
+            return response.contentEquals(AppConstants.ACKNOWLEDGED) ? true : false;
 
         }
 
@@ -197,24 +197,24 @@ public class Client {
         PrintWriter writer = new PrintWriter(s.getOutputStream(), true);
 
         switch (commands[0]) {
-            case "GET":
+            case AppConstants.GET:
                 if (commands.length != 2) {
                     LOG.warning("Insufficient parameters for GET command");
-                    writer.println("FILENOTFOUND");
+                    writer.println(AppConstants.FILENOTFOUND);
                     break;
                 }
 
                 String fileName = commands[1];
-                File f = new File("C:\\Users\\Ping\\Downloads\\" + fileName);
+                File f = new File(AppConstants.BASE_DIR + fileName);
 
                 if (!f.isFile()) {
-                    writer.println("FILENOTFOUND");
+                    writer.println(AppConstants.FILENOTFOUND);
                     LOG.info("File not found on client");
                 } else if (f.length() > Integer.MAX_VALUE) { //imposing a limit on the size of data that can be transferred
-                    writer.println("FILENOTFOUND");
+                    writer.println(AppConstants.FILENOTFOUND);
                     LOG.warning("File requested was too large to be transferred");
                 } else {
-                    writer.println("FILE");
+                    writer.println(AppConstants.FILE);
                     try (FileInputStream file = new FileInputStream(f); BufferedOutputStream bos = new BufferedOutputStream(s.getOutputStream())) {
                         byte[] buffer = new byte[1024];
                         int count;

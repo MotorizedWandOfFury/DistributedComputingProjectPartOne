@@ -28,13 +28,12 @@ import java.util.logging.Logger;
 public class CSRouter {
 
     private ServerSocket socket;
-    public static final int PORT = 5999;
     private static final Logger LOG = Logger.getLogger(CSRouter.class.getName());
     private ExecutorService exec = Executors.newFixedThreadPool(11);
 
     public CSRouter() throws IOException {
-        socket = new ServerSocket(PORT);
-        LOG.log(Level.INFO, "Starting up CSRouter on port {0}", PORT);
+        socket = new ServerSocket(AppConstants.CSROUTER_PORT);
+        LOG.log(Level.INFO, "Starting up CSRouter on port {0}", AppConstants.CSROUTER_PORT);
     }
 
     private class CSRouterWorker implements Runnable {
@@ -100,10 +99,10 @@ public class CSRouter {
                //BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
         
         switch (commands[0]) {
-            case "HELLO":
+            case AppConstants.HELLO:
                 if (commands.length != 3) {
-                    LOG.warning("Insufficient number of parameters in ADD command");
-                    writer.println("REQUESTUNSUCCESSFULL");
+                    LOG.warning("Insufficient number of parameters in HELLO command");
+                    writer.println(AppConstants.REQUESTUNSUCCESSFULL);
                     break;
                 } //gaurd clause
 
@@ -111,16 +110,16 @@ public class CSRouter {
                 String portNumber = commands[2];
 
                 if(addNewClient(clientName, portNumber)){
-                    writer.println("ACKNOWLEDGED");
+                    writer.println(AppConstants.ACKNOWLEDGED);
                 } else {
-                    writer.println("REQUESTUNSUCCESSFULL");
+                    writer.println(AppConstants.REQUESTUNSUCCESSFULL);
                 }
          
                 break;
-            case "BYE":
+            case AppConstants.BYE:
                 if (commands.length != 2) {
                     LOG.warning("Insufficient number of parameters in BYE command");
-                    writer.println("REQUESTUNSUCCESSFULL");
+                    writer.println(AppConstants.REQUESTUNSUCCESSFULL);
                     break;
                 } //gaurd clause
 
@@ -129,11 +128,11 @@ public class CSRouter {
 
                 LOG.log(Level.INFO, "client request serviced: BYE {0}", clientName);
                 break;
-            case "GET":
+            case AppConstants.GET:
                 long start = System.currentTimeMillis();
                 if (commands.length != 3) {
                     LOG.warning("Insufficient number of parameters in GET command");
-                    writer.println("REQUESTUNSUCCESSFULL");
+                    writer.println(AppConstants.REQUESTUNSUCCESSFULL);
                     break;
                 } //gaurd clause
 
@@ -143,13 +142,13 @@ public class CSRouter {
                 int fromPort = getPort(fromClient);
 
                 if (fromPort == 0) {
-                    writer.println("REQUESTUNSUCCESSFULL");
+                    writer.println(AppConstants.REQUESTUNSUCCESSFULL);
                 } else {
                     File requestedFile = getFileFromClient(fromPort, fileName);
                     if (requestedFile == null) {
-                        writer.println("REQUESTUNSUCCESSFULL");
+                        writer.println(AppConstants.REQUESTUNSUCCESSFULL);
                     } else {
-                        writer.println("FILE");
+                        writer.println(AppConstants.FILE);
                         LOG.info("File received. Sending to client" );
                         
                         FileInputStream fis = new FileInputStream(requestedFile);
@@ -190,11 +189,11 @@ public class CSRouter {
         long start = System.currentTimeMillis();
 
         String[] commands;
-        try (Socket s = new Socket("localhost", ServerRouter.PORT);
+        try (Socket s = new Socket(AppConstants.HOST, AppConstants.SERVERROUTER_PORT);
                 PrintWriter w = new PrintWriter(s.getOutputStream(), true);
                 BufferedReader r = new BufferedReader(new InputStreamReader(s.getInputStream()))) {
 
-            w.println("FIND " + clientName);
+            w.println(AppConstants.FIND + " " + clientName);
             String response = r.readLine();
 
             commands = response.split("\\s");
@@ -203,32 +202,32 @@ public class CSRouter {
         long end = System.currentTimeMillis();
         LOG.log(Level.INFO, "Port name retrieved in {0} ms", (end - start));
         //return the port as an int if found, else return 0
-        return (commands[0].contentEquals("FOUND")) ? Integer.parseInt(commands[1]) : 0;
+        return (commands[0].contentEquals(AppConstants.FOUND)) ? Integer.parseInt(commands[1]) : 0;
     }
 
     private boolean addNewClient(String clientName, String portNumber) throws UnknownHostException, IOException {
-        try (Socket s = new Socket("localhost", ServerRouter.PORT)) {
+        try (Socket s = new Socket(AppConstants.HOST, AppConstants.SERVERROUTER_PORT)) {
             PrintWriter w = new PrintWriter(s.getOutputStream(), true);
             BufferedReader r = new BufferedReader(new InputStreamReader(s.getInputStream()));
 
-            w.println("ADD " + clientName + " " + portNumber);
+            w.println(AppConstants.ADD + " " + clientName + " " + portNumber);
             
             String result = r.readLine();
 
             w.close();
             r.close();
             
-            return result.contentEquals("OK") ? true : false;
+            return result.contentEquals(AppConstants.OK) ? true : false;
         }
         
         
     }
 
     private void removeClient(String clientName) throws UnknownHostException, IOException {
-        try (Socket s = new Socket("localhost", ServerRouter.PORT)) {
+        try (Socket s = new Socket(AppConstants.HOST, AppConstants.SERVERROUTER_PORT)) {
             PrintWriter w = new PrintWriter(s.getOutputStream(), true);
 
-            w.println("REMOVE " + clientName);
+            w.println(AppConstants.REMOVE + " "+ clientName);
 
             w.close();
         }
@@ -238,21 +237,21 @@ public class CSRouter {
         long start = System.currentTimeMillis();
         
         File f = null;
-        try (Socket fileServer = new Socket("localhost", port)) {
+        try (Socket fileServer = new Socket(AppConstants.HOST, port)) {
             PrintWriter newWriter = new PrintWriter(fileServer.getOutputStream(), true);
             BufferedReader newReader = new BufferedReader(new InputStreamReader(fileServer.getInputStream()));
 
-            newWriter.println("GET " + fileName);
+            newWriter.println(AppConstants.GET + " " + fileName);
 
             String response = newReader.readLine();
             String[] commands = response.split("\\s");
 
             switch (commands[0]) {
-                case "FILENOTFOUND":
+                case AppConstants.FILENOTFOUND:
                     break;
-                case "FILE":
-                    new File("C:\\Users\\Ping\\Downloads\\temp\\").mkdir();
-                    f = new File("C:\\Users\\Ping\\Downloads\\temp\\"+fileName);
+                case AppConstants.FILE:
+                    new File(AppConstants.BASE_DIR + "temp\\").mkdir();
+                    f = new File(AppConstants.BASE_DIR + "temp\\"+fileName);
                     FileOutputStream fos = new FileOutputStream(f);
                     byte[] buffer = new byte[1024];
                     int count;

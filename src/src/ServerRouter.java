@@ -23,15 +23,14 @@ import java.util.logging.Logger;
 public class ServerRouter {
 
     private HashMap<String, Integer> routingTable;
-    public static final int PORT = 6000;
     private ServerSocket service;
     private static final Logger LOG = Logger.getLogger(ServerRouter.class.getName());
     private ExecutorService exec = Executors.newCachedThreadPool();
 
     public ServerRouter() throws IOException {
         routingTable = new HashMap<>();
-        service = new ServerSocket(PORT);
-        LOG.log(Level.INFO, "Starting up ServerRouter on port {0}", PORT);
+        service = new ServerSocket(AppConstants.SERVERROUTER_PORT);
+        LOG.log(Level.INFO, "Starting up ServerRouter on port {0}", AppConstants.SERVERROUTER_PORT);
     }
 
     private class ServerRouterWorker implements Runnable {
@@ -85,7 +84,7 @@ public class ServerRouter {
     private void dispatch(String[] commands, PrintWriter writer) {
 
         switch (commands[0]) { //first element of string array must be one of the accepted commands
-            case "ADD":
+            case AppConstants.ADD:
                 if (commands.length != 3) {
                     LOG.warning("Insufficient number of parameters in ADD command");
                     break;
@@ -99,9 +98,9 @@ public class ServerRouter {
                     boolean status = add(clientName, port);
 
                     if (status) {
-                        writer.println("OK");
+                        writer.println(AppConstants.OK);
                     } else {
-                        writer.println("ERROR");
+                        writer.println(AppConstants.ERROR);
                     }
                 } catch (NumberFormatException nfe) {
                     LOG.warning("portNumber parameter was not an integer");
@@ -109,21 +108,21 @@ public class ServerRouter {
 
                 LOG.log(Level.INFO, "client request serviced: ADD {0} {1}", new Object[]{clientName, portNumber});
                 break;
-            case "REMOVE":
+            case AppConstants.REMOVE:
                 clientName = commands[1];
 
                 remove(clientName);
 
                 LOG.log(Level.INFO, "client request serviced: REMOVE {0}", clientName);
                 break;
-            case "FIND":
+            case AppConstants.FIND:
                 clientName = commands[1];
                 int portNumberResult = find(clientName);
 
                 if (portNumberResult == 0) {
-                    writer.println("NOTFOUND");
+                    writer.println(AppConstants.NOTFOUND);
                 } else {
-                    writer.println("FOUND " + portNumberResult);
+                    writer.println(AppConstants.FOUND + " " + portNumberResult);
                 }
 
                 LOG.log(Level.INFO, "client request serviced: FIND {0}", clientName);
