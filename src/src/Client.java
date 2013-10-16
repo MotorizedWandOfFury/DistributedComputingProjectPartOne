@@ -32,6 +32,8 @@ public class Client {
     private int port;
     private ServerSocket server;
     private ExecutorService exec = Executors.newCachedThreadPool();
+    
+    private static final String BASE_DIR = "C:\\Users\\Ping\\Downloads\\project\\";
     private static final Logger LOG = Logger.getLogger(Client.class.getName());
 
     public Client(String name, int port) throws IOException {
@@ -50,7 +52,7 @@ public class Client {
                 Socket s = new Socket(AppConstants.HOST, AppConstants.CSROUTER_PORT);
                 PrintWriter w = new PrintWriter(s.getOutputStream(), true);
                 BufferedReader r = new BufferedReader(new InputStreamReader(s.getInputStream()));
-                new File(AppConstants.BASE_DIR + name + "\\").mkdir();
+                new File(BASE_DIR + name + "\\").mkdir();
 
                 Scanner scan = new Scanner(System.in);
                 String userRequest;
@@ -100,7 +102,7 @@ public class Client {
                             
                             LOG.log(Level.INFO, "File was found in {0}ms. Receiving file", fileLookUpTime);
 
-                            File f = new File(AppConstants.BASE_DIR + name + "\\" + fileName);
+                            File f = new File(BASE_DIR + name + "\\" + fileName);
                             FileOutputStream fos = new FileOutputStream(f);
                             InputStream in = s.getInputStream();
                             byte[] buffer = new byte[s.getReceiveBufferSize()];
@@ -205,7 +207,7 @@ public class Client {
                 }
 
                 String fileName = commands[1];
-                File f = new File(AppConstants.BASE_DIR + fileName);
+                File f = new File(BASE_DIR + fileName);
 
                 if (!f.isFile()) {
                     writer.println(AppConstants.FILENOTFOUND);

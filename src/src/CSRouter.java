@@ -28,6 +28,7 @@ import java.util.logging.Logger;
 public class CSRouter {
 
     private ServerSocket socket;
+    private static final String BASE_DIR = "C:\\Users\\Ping\\Downloads\\project\\";
     private static final Logger LOG = Logger.getLogger(CSRouter.class.getName());
     private ExecutorService exec = Executors.newFixedThreadPool(11);
 
@@ -172,6 +173,10 @@ public class CSRouter {
                         fis.close();
                         bos.close();
                         
+                        if(requestedFile != null){
+                            requestedFile.deleteOnExit(); //tidy up
+                        }
+                        
                         long fileSendTime = System.currentTimeMillis() - fileSendTimeStart;
                         LOG.log(Level.INFO, "File {0} sent in {1}ms", new Object[]{fileName, fileSendTime});
                     }
@@ -250,8 +255,8 @@ public class CSRouter {
                 case AppConstants.FILENOTFOUND:
                     break;
                 case AppConstants.FILE:
-                    new File(AppConstants.BASE_DIR + "temp\\").mkdir();
-                    f = new File(AppConstants.BASE_DIR + "temp\\"+fileName);
+                    new File(BASE_DIR + "temp\\").mkdir();
+                    f = new File(BASE_DIR + "temp\\"+fileName);
                     FileOutputStream fos = new FileOutputStream(f);
                     byte[] buffer = new byte[1024];
                     int count;

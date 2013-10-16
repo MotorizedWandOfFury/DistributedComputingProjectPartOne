@@ -10,8 +10,7 @@ package src;
  */
 public class AppConstants {
 
-    public static final String HOST = "localhost",
-            BASE_DIR = "C:\\Users\\Ping\\Downloads\\";
+    public static final String HOST = "localhost";
     
     public static final int CSROUTER_PORT = 5999, 
     SERVERROUTER_PORT = 6000;
