@@ -114,7 +114,8 @@ public class Client {
                                 fos.write(buffer, 0, count);
                                 fos.flush();
                             }
-                            
+                            fos.close();
+                            in.close();
                             long end = System.currentTimeMillis();
                             LOG.log(Level.INFO, "File received in {0}ms. File size was {1} bytes.", new Object[]{end-start, f.length()});
                             break;
