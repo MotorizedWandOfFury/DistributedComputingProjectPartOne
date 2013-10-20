@@ -50,7 +50,7 @@ public class CSRouter {
 
         @Override
         public void run() {
-            LOG.log(Level.INFO, "New Thread spawned for client at port: {0}", clientPort);
+            //LOG.log(Level.INFO, "New Thread spawned for client at port: {0}", clientPort);
             try {
                 reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
@@ -60,11 +60,11 @@ public class CSRouter {
 
                     String[] commands = request.split("\\s");
 
-                    LOG.log(Level.INFO, "Responding to request from client {0}: {1}", new Object[]{clientPort, request});
+                   //LOG.log(Level.INFO, "Responding to request from client {0}: {1}", new Object[]{clientPort, request});
 
                     dispatch(commands, client);
 
-                    LOG.log(Level.INFO, "Response sent to client at port {0}", clientPort);
+                   // LOG.log(Level.INFO, "Response sent to client at port {0}", clientPort);
                 }
 
             } catch (Exception ex) {
@@ -73,7 +73,7 @@ public class CSRouter {
                 try {
                     reader.close();
                     client.close();
-                    LOG.log(Level.INFO, "Client {0} disconnected. Ending thread.", clientPort);
+                   // LOG.log(Level.INFO, "Client {0} disconnected. Ending thread.", clientPort);
                 } catch (IOException ex) {
                     LOG.log(Level.SEVERE, null, ex);
                 }
@@ -84,6 +84,7 @@ public class CSRouter {
     public void listen() throws IOException {
 
         LOG.info("CSRouter is now listening");
+        LOG.info("Format of output will be: \n File name, client port resolution time, file reception from client time, file size, sending to client time, total request time");
 
         try {
             while (true) {
@@ -127,7 +128,7 @@ public class CSRouter {
                 clientName = commands[1];
                 removeClient(clientName);
 
-                LOG.log(Level.INFO, "client request serviced: BYE {0}", clientName);
+                //LOG.log(Level.INFO, "client request serviced: BYE {0}", clientName);
                 break;
             case AppConstants.GET:
                 long start = System.currentTimeMillis();
@@ -139,6 +140,8 @@ public class CSRouter {
 
                 String fileName = commands[1];
                 String fromClient = commands[2];
+                
+                System.out.print(fileName + ", ");
 
                 int fromPort = getPort(fromClient);
 
@@ -150,7 +153,7 @@ public class CSRouter {
                         writer.println(AppConstants.REQUESTUNSUCCESSFULL);
                     } else {
                         writer.println(AppConstants.FILE);
-                        LOG.info("File received. Sending to client" );
+                        //LOG.info("File received. Sending to client" );
                         
                         FileInputStream fis = new FileInputStream(requestedFile);
                         BufferedOutputStream bos = new BufferedOutputStream(client.getOutputStream());
@@ -160,30 +163,23 @@ public class CSRouter {
                         long fileSendTimeStart = System.currentTimeMillis();
                         
                         while((count = fis.read(buffer)) > 0){
-                            
-                            //long fileReadTimeStart = System.currentTimeMillis();
-                            
                             bos.write(buffer, 0, count);
                             bos.flush();
-                            
-                            //long fileReadTime = System.currentTimeMillis() - fileReadTimeStart;
-                            
-                            //LOG.log(Level.INFO, "Read and sent {0} bytes to client in {1}ms", new Object[]{count, fileReadTime});
                         }
                         fis.close();
                         bos.close();
                         
-                        if(requestedFile != null){
-                            requestedFile.deleteOnExit(); //tidy up
-                        }
                         
                         long fileSendTime = System.currentTimeMillis() - fileSendTimeStart;
-                        LOG.log(Level.INFO, "File {0} sent in {1}ms", new Object[]{fileName, fileSendTime});
+                        System.out.print((fileSendTime) + ", ");
+                        //LOG.log(Level.INFO, "File {0} sent in {1}ms", new Object[]{fileName, fileSendTime});
                     }
                 }
 
                 long end = System.currentTimeMillis();
-                LOG.log(Level.INFO, "client request serviced in {2}ms: GET {0} {1}", new Object[]{commands[1], commands[2], (end - start)});
+                System.out.print(end-start);
+                System.out.println();
+                //LOG.log(Level.INFO, "client request serviced in {2}ms: GET {0} {1}", new Object[]{commands[1], commands[2], (end - start)});
                 break;
             default:
                 LOG.log(Level.WARNING, "Unknown command: {0}", commands[0]);
@@ -205,7 +201,8 @@ public class CSRouter {
         }
 
         long end = System.currentTimeMillis();
-        LOG.log(Level.INFO, "Port name retrieved in {0} ms", (end - start));
+        //LOG.log(Level.INFO, "Port name retrieved in {0} ms", (end - start));
+        System.out.print(end-start + ", ");
         //return the port as an int if found, else return 0
         return (commands[0].contentEquals(AppConstants.FOUND)) ? Integer.parseInt(commands[1]) : 0;
     }
@@ -242,9 +239,8 @@ public class CSRouter {
         long start = System.currentTimeMillis();
         
         File f = null;
-        try (Socket fileServer = new Socket(AppConstants.HOST, port)) {
-            PrintWriter newWriter = new PrintWriter(fileServer.getOutputStream(), true);
-            BufferedReader newReader = new BufferedReader(new InputStreamReader(fileServer.getInputStream()));
+        try (Socket fileServer = new Socket(AppConstants.HOST, port); PrintWriter newWriter = new PrintWriter(fileServer.getOutputStream(), true); 
+                BufferedReader newReader = new BufferedReader(new InputStreamReader(fileServer.getInputStream()))) {
 
             newWriter.println(AppConstants.GET + " " + fileName);
 
@@ -265,15 +261,10 @@ public class CSRouter {
                     
                     long fileReceptionStart = System.currentTimeMillis();
                     
-                    LOG.info("Receiving file");
+                    //LOG.info("Receiving file");
                     while((count = in.read(buffer)) > 0){
-                        //long writeTimeStart = System.currentTimeMillis();
-                        
                         fos.write(buffer, 0, count); 
                         fos.flush();
-                        
-                       // long writeTimeEnd = System.currentTimeMillis();
-                        //LOG.log(Level.INFO, "Wrote and flushed {0} bytes in {1}ms to file {2}", new Object[]{count, writeTimeEnd - writeTimeStart, fileName});
                     }
                     
                     fos.close();
@@ -281,12 +272,14 @@ public class CSRouter {
                     
                     long fileReceptionEnd = System.currentTimeMillis();
                     
-                    LOG.log(Level.INFO, "File {1} received from client in {0}ms", new Object[]{(fileReceptionEnd - fileReceptionStart), fileName});
+                    //LOG.log(Level.INFO, "File {1} received from client in {0}ms", new Object[]{(fileReceptionEnd - fileReceptionStart), fileName});
+                    System.out.print((fileReceptionEnd - fileReceptionStart) + ", ");
                     break;
             }
         }
         long end = System.currentTimeMillis();
-        LOG.log(Level.INFO, "File retrieval operation completed in {0}ms. File recieved was {1} bytes in size", new Object[]{(end - start), f.length()});
+        System.out.print(f.length() + ", ");
+        //LOG.log(Level.INFO, "File retrieval operation completed in {0}ms. File recieved was {1} bytes in size", new Object[]{(end - start), f.length()});
         return f;
     }
 }
